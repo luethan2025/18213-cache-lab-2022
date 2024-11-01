@@ -124,10 +124,45 @@ static void trans_tmp(size_t M, size_t N, double A[N][M], double B[M][N],
  */
 static void transpose_submit(size_t M, size_t N, double A[N][M], double B[M][N],
                              double tmp[TMPCOUNT]) {
-    if (M == N)
-        trans_basic(M, N, A, B, tmp);
-    else
+    size_t i, j, jj, ii;
+    size_t k;
+    size_t b;
+    size_t iii, jjj;
+
+    if (N == 32 && M == 32) {
+        b = 8;
+        for (i = 0; i < N; i += b) {
+            for (j = 0; j < M; j += b) {
+                for (jj = j; jj < j + b; jj++) {
+                    for (ii = i; ii < i + b; ii++) {
+                        if (jj != ii) {
+                            B[ii][jj] = A[jj][ii];
+                        } else {
+                            iii = ii;
+                            jjj = jj;
+                            k = jj;
+                        }
+                    }
+                    if (i == j) {
+                        B[k][k] = A[jjj][iii];
+                    }
+                }
+            }
+        }
+    } else if (N == 1024 && M == 1024) {
+        b = 8;
+        for (i = 0; i < N; i += b) {
+            for (j = 0; j < M; j += b) {
+                for (jj = j; jj < j + b; jj++) {
+                    for (ii = i; ii < i + b; ii++) {
+                        B[ii][jj] = A[jj][ii];
+                    }
+                }
+            }
+        }
+    } else {
         trans_tmp(M, N, A, B, tmp);
+    }
 }
 
 /**
